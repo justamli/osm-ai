@@ -363,6 +363,6 @@ You MUST reply with a VALID JSON object and absolutely NOTHING else. Do not use 
   }
 });
 
-app.listen(PORT, () => {
-  console.log(`Backend Service Layer listening on port ${PORT}`);
+app.listen(PORT, '0.0.0.0', () => {
+  console.log(`Backend Service Layer listening on port ${PORT} (accessible from other machines)`);
 });

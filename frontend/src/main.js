@@ -13,7 +13,7 @@ let chatHistory = [];
 let isGenerating = false;
 
 // The backend endpoint we created
-const API_ENDPOINT = 'http://localhost:3000/api/chat';
+const API_ENDPOINT = `http://${window.location.hostname}:3000/api/chat`;
 
 // Auto-resize textarea
 messageInput.addEventListener('input', function() {
@@ -219,7 +219,7 @@ const saveStatus = document.getElementById('save-status');
 let currentPrompts = {};
 let activeIntent = null;
 
-const PROMPT_API = 'http://localhost:3000/api/prompts';
+const PROMPT_API = `http://${window.location.hostname}:3000/api/prompts`;
 
 settingsBtn.addEventListener('click', (e) => {
     e.preventDefault();
