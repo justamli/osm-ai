@@ -200,6 +200,12 @@ app.post('/api/chat', async (req, res) => {
     // Inject the dynamically fetched service data into the prompt
     systemPrompt = systemPrompt + `\n\n[CONTEXT DATA INJECTED BY SERVICE LAYER: ${dynamicServiceData}]`;
 
+    // Detect if this is a follow-up message (greeting already happened)
+    const isFirstMessage = !history || history.length === 0;
+    if (!isFirstMessage) {
+      systemPrompt += `\n\n[CONVERSATION RULE: This is NOT the user's first message. Do NOT start with any greeting like "喂", "你好", "👋" or any welcoming phrase. Jump straight into your response naturally as a continuation of the conversation. Be concise and direct.]`;
+    }
+
     const messages = [...(history || []), { role: "User", content: currentMessage }];
     const finalReply = await callLocalLLM(systemPrompt, messages);
 
