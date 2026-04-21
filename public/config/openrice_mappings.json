@@ -1,0 +1,801 @@
+{
+  "districts": [
+    {
+      "searchKey": "districtId=1001",
+      "name": "Sheung Wan",
+      "count": 536
+    },
+    {
+      "searchKey": "districtId=1002",
+      "name": "The Peak",
+      "count": 40
+    },
+    {
+      "searchKey": "districtId=1003",
+      "name": "Central",
+      "count": 1536
+    },
+    {
+      "searchKey": "districtId=1004",
+      "name": "North Point",
+      "count": 575
+    },
+    {
+      "searchKey": "districtId=1005",
+      "name": "Mid-Levels",
+      "count": 78
+    },
+    {
+      "searchKey": "districtId=1007",
+      "name": "Shek O",
+      "count": 28
+    },
+    {
+      "searchKey": "districtId=1008",
+      "name": "Western District",
+      "count": 797
+    },
+    {
+      "searchKey": "districtId=1009",
+      "name": "Sai Wan Ho",
+      "count": 188
+    },
+    {
+      "searchKey": "districtId=1010",
+      "name": "Stanley",
+      "count": 56
+    },
+    {
+      "searchKey": "districtId=1011",
+      "name": "Admiralty",
+      "count": 196
+    },
+    {
+      "searchKey": "districtId=1012",
+      "name": "Aberdeen",
+      "count": 257
+    },
+    {
+      "searchKey": "districtId=1013",
+      "name": "Chai Wan",
+      "count": 301
+    },
+    {
+      "searchKey": "districtId=1014",
+      "name": "Quarry Bay",
+      "count": 305
+    },
+    {
+      "searchKey": "districtId=1015",
+      "name": "Repulse Bay",
+      "count": 28
+    },
+    {
+      "searchKey": "districtId=1016",
+      "name": "Deep Water Bay",
+      "count": 13
+    },
+    {
+      "searchKey": "districtId=1017",
+      "name": "Happy Valley",
+      "count": 137
+    },
+    {
+      "searchKey": "districtId=1018",
+      "name": "Shau Kei Wan",
+      "count": 237
+    },
+    {
+      "searchKey": "districtId=1019",
+      "name": "Causeway Bay",
+      "count": 1302
+    },
+    {
+      "searchKey": "districtId=1020",
+      "name": "Ap Lei Chau",
+      "count": 149
+    },
+    {
+      "searchKey": "districtId=1021",
+      "name": "Pok Fu Lam",
+      "count": 76
+    },
+    {
+      "searchKey": "districtId=1022",
+      "name": "Wan Chai",
+      "count": 1244
+    },
+    {
+      "searchKey": "districtId=1023",
+      "name": "Tai Koo",
+      "count": 228
+    },
+    {
+      "searchKey": "districtId=1024",
+      "name": "Heng Fa Chuen",
+      "count": 41
+    },
+    {
+      "searchKey": "districtId=1025",
+      "name": "Tai Hang",
+      "count": 97
+    },
+    {
+      "searchKey": "districtId=1026",
+      "name": "Tin Hau",
+      "count": 210
+    },
+    {
+      "searchKey": "districtId=1027",
+      "name": "Wong Chuk Hang",
+      "count": 180
+    },
+    {
+      "searchKey": "districtId=2001",
+      "name": "Kowloon City",
+      "count": 504
+    },
+    {
+      "searchKey": "districtId=2002",
+      "name": "Kowloon Tong",
+      "count": 137
+    },
+    {
+      "searchKey": "districtId=2003",
+      "name": "Kowloon Bay",
+      "count": 570
+    },
+    {
+      "searchKey": "districtId=2004",
+      "name": "To Kwa Wan",
+      "count": 453
+    },
+    {
+      "searchKey": "districtId=2005",
+      "name": "Tai Kok Tsui",
+      "count": 507
+    },
+    {
+      "searchKey": "districtId=2006",
+      "name": "Ngau Tau Kok",
+      "count": 182
+    },
+    {
+      "searchKey": "districtId=2007",
+      "name": "Shek Kip Mei",
+      "count": 107
+    },
+    {
+      "searchKey": "districtId=2008",
+      "name": "Tsim Sha Tsui",
+      "count": 2119
+    },
+    {
+      "searchKey": "districtId=2009",
+      "name": "Ho Man Tin",
+      "count": 110
+    },
+    {
+      "searchKey": "districtId=2010",
+      "name": "Mong Kok",
+      "count": 1332
+    },
+    {
+      "searchKey": "districtId=2011",
+      "name": "Yau Ma Tei",
+      "count": 301
+    },
+    {
+      "searchKey": "districtId=2012",
+      "name": "Yau Tong",
+      "count": 129
+    },
+    {
+      "searchKey": "districtId=2013",
+      "name": "Cheung Sha Wan",
+      "count": 447
+    },
+    {
+      "searchKey": "districtId=2015",
+      "name": "Hung Hom",
+      "count": 687
+    },
+    {
+      "searchKey": "districtId=2016",
+      "name": "Lai Chi Kok",
+      "count": 351
+    },
+    {
+      "searchKey": "districtId=2019",
+      "name": "Sham Shui Po",
+      "count": 835
+    },
+    {
+      "searchKey": "districtId=2020",
+      "name": "Wong Tai Sin",
+      "count": 239
+    },
+    {
+      "searchKey": "districtId=2021",
+      "name": "Tsz Wan Shan",
+      "count": 99
+    },
+    {
+      "searchKey": "districtId=2022",
+      "name": "San Po Kong",
+      "count": 338
+    },
+    {
+      "searchKey": "districtId=2024",
+      "name": "Lam Tin",
+      "count": 177
+    },
+    {
+      "searchKey": "districtId=2025",
+      "name": "Lei Yue Mun",
+      "count": 41
+    },
+    {
+      "searchKey": "districtId=2026",
+      "name": "Kwun Tong",
+      "count": 1267
+    },
+    {
+      "searchKey": "districtId=2027",
+      "name": "Diamond Hill",
+      "count": 108
+    },
+    {
+      "searchKey": "districtId=2028",
+      "name": "Jordan",
+      "count": 608
+    },
+    {
+      "searchKey": "districtId=2029",
+      "name": "Prince Edward",
+      "count": 437
+    },
+    {
+      "searchKey": "districtId=2030",
+      "name": "Lok Fu",
+      "count": 97
+    },
+    {
+      "searchKey": "districtId=2031",
+      "name": "Mei Foo",
+      "count": 110
+    },
+    {
+      "searchKey": "districtId=2032",
+      "name": "Choi Hung",
+      "count": 78
+    },
+    {
+      "searchKey": "districtId=3001",
+      "name": "Sheung Shui",
+      "count": 348
+    },
+    {
+      "searchKey": "districtId=3002",
+      "name": "Tai Po",
+      "count": 677
+    },
+    {
+      "searchKey": "districtId=3003",
+      "name": "Yuen Long",
+      "count": 1519
+    },
+    {
+      "searchKey": "districtId=3004",
+      "name": "Tin Shui Wai",
+      "count": 422
+    },
+    {
+      "searchKey": "districtId=3005",
+      "name": "Tuen Mun",
+      "count": 1415
+    },
+    {
+      "searchKey": "districtId=3006",
+      "name": "Sai Kung",
+      "count": 317
+    },
+    {
+      "searchKey": "districtId=3007",
+      "name": "Sha Tin",
+      "count": 914
+    },
+    {
+      "searchKey": "districtId=3008",
+      "name": "Fanling",
+      "count": 410
+    },
+    {
+      "searchKey": "districtId=3009",
+      "name": "Ma On Shan",
+      "count": 347
+    },
+    {
+      "searchKey": "districtId=3010",
+      "name": "Sham Tseng",
+      "count": 47
+    },
+    {
+      "searchKey": "districtId=3011",
+      "name": "Lo Wu",
+      "count": 5
+    },
+    {
+      "searchKey": "districtId=3012",
+      "name": "Tai Wai",
+      "count": 348
+    },
+    {
+      "searchKey": "districtId=3013",
+      "name": "Fo Tan",
+      "count": 171
+    },
+    {
+      "searchKey": "districtId=3014",
+      "name": "Tai Wo",
+      "count": 63
+    },
+    {
+      "searchKey": "districtId=3015",
+      "name": "Kwai Fong",
+      "count": 348
+    },
+    {
+      "searchKey": "districtId=3016",
+      "name": "Lau Fau shan",
+      "count": 35
+    },
+    {
+      "searchKey": "districtId=3017",
+      "name": "Tsing Yi",
+      "count": 266
+    },
+    {
+      "searchKey": "districtId=3018",
+      "name": "Tsuen Wan",
+      "count": 1467
+    },
+    {
+      "searchKey": "districtId=3019",
+      "name": "Kwai Chung",
+      "count": 613
+    },
+    {
+      "searchKey": "districtId=3020",
+      "name": "Tseung Kwan O",
+      "count": 852
+    },
+    {
+      "searchKey": "districtId=3021",
+      "name": "Lok Ma Chau",
+      "count": 8
+    },
+    {
+      "searchKey": "districtId=3022",
+      "name": "Ma Wan",
+      "count": 41
+    },
+    {
+      "searchKey": "districtId=-35242",
+      "name": "Kennedy Town",
+      "count": 228
+    },
+    {
+      "searchKey": "districtId=-35243",
+      "name": "Shek Tong Tsui",
+      "count": 176
+    },
+    {
+      "searchKey": "districtId=-35244",
+      "name": "Sai Ying Pun",
+      "count": 365
+    },
+    {
+      "searchKey": "districtId=-35259",
+      "name": "Hang Hau",
+      "count": 179
+    },
+    {
+      "searchKey": "districtId=-35260",
+      "name": "Po Lam",
+      "count": 225
+    },
+    {
+      "searchKey": "districtId=-35276",
+      "name": "O’South Coast",
+      "count": 28
+    },
+    {
+      "searchKey": "districtId=4001",
+      "name": "Lantau Island",
+      "count": 123
+    },
+    {
+      "searchKey": "districtId=4002",
+      "name": "Chek Lap Kok",
+      "count": 155
+    },
+    {
+      "searchKey": "districtId=4003",
+      "name": "Peng Chau",
+      "count": 37
+    },
+    {
+      "searchKey": "districtId=4004",
+      "name": "Cheung Chau",
+      "count": 211
+    },
+    {
+      "searchKey": "districtId=4005",
+      "name": "Lamma Island",
+      "count": 78
+    },
+    {
+      "searchKey": "districtId=4006",
+      "name": "Discovery Bay",
+      "count": 51
+    },
+    {
+      "searchKey": "districtId=4009",
+      "name": "Tung Chung",
+      "count": 226
+    },
+    {
+      "searchKey": "districtId=4010",
+      "name": "Tai O",
+      "count": 72
+    },
+    {
+      "searchKey": "districtId=4011",
+      "name": "Po Toi Island",
+      "count": 8
+    },
+    {
+      "searchKey": "districtId=-9006",
+      "name": "Soho",
+      "count": 232
+    },
+    {
+      "searchKey": "districtId=-9007",
+      "name": "Lan Kwai Fong",
+      "count": 149
+    },
+    {
+      "searchKey": "districtId=-9151",
+      "name": "Cyberport",
+      "count": 30
+    }
+  ],
+  "cuisines": [
+    {
+      "searchKey": "cuisineId=1001",
+      "name": "Chiu Chow",
+      "count": 528
+    },
+    {
+      "searchKey": "cuisineId=1002",
+      "name": "Guangdong",
+      "count": 3652
+    },
+    {
+      "searchKey": "cuisineId=1003",
+      "name": "Yunnan",
+      "count": 398
+    },
+    {
+      "searchKey": "cuisineId=1004",
+      "name": "Hong Kong Style",
+      "count": 11399
+    },
+    {
+      "searchKey": "cuisineId=1005",
+      "name": "Hakka",
+      "count": 86
+    },
+    {
+      "searchKey": "cuisineId=1007",
+      "name": "Jiang-Zhe",
+      "count": 23
+    },
+    {
+      "searchKey": "cuisineId=1008",
+      "name": "Sichuan",
+      "count": 973
+    },
+    {
+      "searchKey": "cuisineId=1009",
+      "name": "Taiwan",
+      "count": 1571
+    },
+    {
+      "searchKey": "cuisineId=1010",
+      "name": "Beijing",
+      "count": 65
+    },
+    {
+      "searchKey": "cuisineId=1011",
+      "name": "Shanghai",
+      "count": 410
+    },
+    {
+      "searchKey": "cuisineId=1012",
+      "name": "Fujian",
+      "count": 35
+    },
+    {
+      "searchKey": "cuisineId=1013",
+      "name": "Hunan",
+      "count": 125
+    },
+    {
+      "searchKey": "cuisineId=1014",
+      "name": "Mongolia",
+      "count": 10
+    },
+    {
+      "searchKey": "cuisineId=1015",
+      "name": "Xinjiang",
+      "count": 14
+    },
+    {
+      "searchKey": "cuisineId=1016",
+      "name": "Northeastern",
+      "count": 34
+    },
+    {
+      "searchKey": "cuisineId=1017",
+      "name": "Guizhou",
+      "count": 14
+    },
+    {
+      "searchKey": "cuisineId=1018",
+      "name": "Jingchuanhu",
+      "count": 124
+    },
+    {
+      "searchKey": "cuisineId=1021",
+      "name": "Shandong",
+      "count": 24
+    },
+    {
+      "searchKey": "cuisineId=1024",
+      "name": "Hubei",
+      "count": 1
+    },
+    {
+      "searchKey": "cuisineId=1026",
+      "name": "Guangxi",
+      "count": 37
+    },
+    {
+      "searchKey": "cuisineId=1027",
+      "name": "Village Food",
+      "count": 13
+    },
+    {
+      "searchKey": "cuisineId=1030",
+      "name": "Shanxi (Jin)",
+      "count": 26
+    },
+    {
+      "searchKey": "cuisineId=1031",
+      "name": "Shanxi (Shan)",
+      "count": 11
+    },
+    {
+      "searchKey": "cuisineId=1032",
+      "name": "Huaiyang",
+      "count": 5
+    },
+    {
+      "searchKey": "cuisineId=1033",
+      "name": "Shunde",
+      "count": 36
+    },
+    {
+      "searchKey": "cuisineId=2001",
+      "name": "Korean",
+      "count": 565
+    },
+    {
+      "searchKey": "cuisineId=2002",
+      "name": "Vietnamese",
+      "count": 373
+    },
+    {
+      "searchKey": "cuisineId=2003",
+      "name": "Philippines",
+      "count": 46
+    },
+    {
+      "searchKey": "cuisineId=2004",
+      "name": "Thai",
+      "count": 946
+    },
+    {
+      "searchKey": "cuisineId=2005",
+      "name": "Singaporean",
+      "count": 219
+    },
+    {
+      "searchKey": "cuisineId=2006",
+      "name": "Indian",
+      "count": 208
+    },
+    {
+      "searchKey": "cuisineId=2007",
+      "name": "Indonesian",
+      "count": 42
+    },
+    {
+      "searchKey": "cuisineId=2008",
+      "name": "Nepalese",
+      "count": 55
+    },
+    {
+      "searchKey": "cuisineId=2009",
+      "name": "Japanese",
+      "count": 3909
+    },
+    {
+      "searchKey": "cuisineId=2010",
+      "name": "Sri Lankan",
+      "count": 3
+    },
+    {
+      "searchKey": "cuisineId=2021",
+      "name": "Middle Eastern",
+      "count": 71
+    },
+    {
+      "searchKey": "cuisineId=2022",
+      "name": "Australian",
+      "count": 44
+    },
+    {
+      "searchKey": "cuisineId=2023",
+      "name": "Lebanon",
+      "count": 6
+    },
+    {
+      "searchKey": "cuisineId=2024",
+      "name": "Malaysian",
+      "count": 158
+    },
+    {
+      "searchKey": "cuisineId=3001",
+      "name": "German",
+      "count": 28
+    },
+    {
+      "searchKey": "cuisineId=3002",
+      "name": "Portuguese",
+      "count": 19
+    },
+    {
+      "searchKey": "cuisineId=3004",
+      "name": "Swiss",
+      "count": 6
+    },
+    {
+      "searchKey": "cuisineId=3005",
+      "name": "Irish",
+      "count": 4
+    },
+    {
+      "searchKey": "cuisineId=3006",
+      "name": "Italian",
+      "count": 886
+    },
+    {
+      "searchKey": "cuisineId=3007",
+      "name": "Austrian",
+      "count": 1
+    },
+    {
+      "searchKey": "cuisineId=3008",
+      "name": "Dutch",
+      "count": 7
+    },
+    {
+      "searchKey": "cuisineId=3009",
+      "name": "British",
+      "count": 113
+    },
+    {
+      "searchKey": "cuisineId=3010",
+      "name": "French",
+      "count": 393
+    },
+    {
+      "searchKey": "cuisineId=3011",
+      "name": "Spanish",
+      "count": 87
+    },
+    {
+      "searchKey": "cuisineId=3012",
+      "name": "Mediterranean",
+      "count": 65
+    },
+    {
+      "searchKey": "cuisineId=3013",
+      "name": "Belgian",
+      "count": 18
+    },
+    {
+      "searchKey": "cuisineId=3021",
+      "name": "Eastern Europe",
+      "count": 5
+    },
+    {
+      "searchKey": "cuisineId=3033",
+      "name": "Turkish",
+      "count": 53
+    },
+    {
+      "searchKey": "cuisineId=3034",
+      "name": "Greek",
+      "count": 4
+    },
+    {
+      "searchKey": "cuisineId=4000",
+      "name": "Western",
+      "count": 4787
+    },
+    {
+      "searchKey": "cuisineId=4001",
+      "name": "American",
+      "count": 1059
+    },
+    {
+      "searchKey": "cuisineId=4002",
+      "name": "Mexican",
+      "count": 42
+    },
+    {
+      "searchKey": "cuisineId=4003",
+      "name": "Cuba",
+      "count": 5
+    },
+    {
+      "searchKey": "cuisineId=4004",
+      "name": "Brazilian",
+      "count": 4
+    },
+    {
+      "searchKey": "cuisineId=4005",
+      "name": "Argentinian",
+      "count": 16
+    },
+    {
+      "searchKey": "cuisineId=4006",
+      "name": "Peruvian",
+      "count": 7
+    },
+    {
+      "searchKey": "cuisineId=5001",
+      "name": "African",
+      "count": 7
+    },
+    {
+      "searchKey": "cuisineId=5004",
+      "name": "Egyptian",
+      "count": 4
+    },
+    {
+      "searchKey": "cuisineId=5005",
+      "name": "Moroccan",
+      "count": 4
+    },
+    {
+      "searchKey": "cuisineId=6000",
+      "name": "International",
+      "count": 2134
+    }
+  ]
+}

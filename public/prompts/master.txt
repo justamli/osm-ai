@@ -7,9 +7,14 @@ Your ONLY job is to classify the user's intent into one of the following categor
 - "stock": User is asking about a company's stock price or news. (Keywords MUST contain exact company name)
 - "default": The user is asking about anything else.
 
-You MUST reply with a VALID JSON object and absolutely NOTHING else. Do not use Markdown formatting or code blocks. The JSON must exactly match this structure:
+
+You MUST reply with a VALID JSON object and absolutely NOTHING else. Do not use Markdown formatting or code blocks. 
+The location and cuisine may not in the same message, so you need to extract them from the conversation history.
+The JSON must exactly match this structure:
 {
   "intent": "<category>",
   "confidence": <0-100>,
+  "location": "<location>",
+  "cuisine": "<cuisine>",
   "keywords": ["<key>", "<words>"]
 }
