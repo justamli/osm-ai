@@ -14,7 +14,8 @@ app.use(express.json());
 const PORT = process.env.PORT || 3000;
 
 // Update this to point to the local LM API
-const LLM_API_URL = 'http://192.168.105.136:1234/api/v1/chat';
+//const LLM_API_URL = 'http://192.168.105.136:1234/api/v1/chat';
+const LLM_API_URL = 'http://127.0.0.1:1234/api/v1/chat';
 const MODEL_NAME = 'gemma-4-e4b-it';
 
 async function callLocalLLM(systemPrompt, userMessages) {
@@ -128,11 +129,14 @@ app.post('/api/chat', async (req, res) => {
   try {
     const { history, currentMessage } = req.body;
 
+    console.log(history);
+    console.log(currentMessage);
     // Layer 1: Master Layer - Intent Classification
     const masterPromptPath = path.join(__dirname, 'public', 'prompts', 'master.txt');
     const masterPrompt = await fs.readFile(masterPromptPath, 'utf8');
 
-    let intentClassificationOutput = await callLocalLLM(masterPrompt, [{ role: "User", content: currentMessage }]);
+    const masterMessages = [...(history || []), { role: "User", content: currentMessage }];
+    let intentClassificationOutput = await callLocalLLM(masterPrompt, masterMessages);
 
     // Clean potential markdown blocks like ```json ... ```
     intentClassificationOutput = intentClassificationOutput.replace(/```json/g, '').replace(/```/g, '').trim();
@@ -165,7 +169,7 @@ app.post('/api/chat', async (req, res) => {
 
     if (detectedIntent !== 'restaurant') {
       offTopicCount++;
-      
+
       if (offTopicCount >= 3) {
         console.log(`[Penalty Activated] User off-topic for ${offTopicCount} consecutive turns. Routing to 'redirect'.`);
         detectedIntent = 'redirect';
@@ -189,8 +193,15 @@ app.post('/api/chat', async (req, res) => {
     let dynamicServiceData = typeof rawServiceData === 'object' ? JSON.stringify(rawServiceData, null, 2) : rawServiceData;
 
     // Append master metadata to dynamic service data if available
-    if (masterJson && masterJson.keywords) {
-      dynamicServiceData += `\n\n[Extracted Keywords from User: ${masterJson.keywords.join(", ")}]`;
+    if (masterJson) {
+      let extractedData = [];
+      if (masterJson.keywords && masterJson.keywords.length > 0) extractedData.push(`Keywords: ${masterJson.keywords.join(", ")}`);
+      if (masterJson.location) extractedData.push(`Location: ${masterJson.location}`);
+      if (masterJson.cuisine) extractedData.push(`Cuisine: ${masterJson.cuisine}`);
+
+      if (extractedData.length > 0) {
+        dynamicServiceData += `\n\n[Extracted Data from User Status: ${extractedData.join(" | ")}]`;
+      }
     }
 
     // Layer 3: Reply Creation Layer
