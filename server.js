@@ -135,7 +135,9 @@ app.post('/api/chat', async (req, res) => {
     const masterPromptPath = path.join(__dirname, 'public', 'prompts', 'master.txt');
     const masterPrompt = await fs.readFile(masterPromptPath, 'utf8');
 
-    const masterMessages = [...(history || []), { role: "User", content: currentMessage }];
+    // Token Saving: Keep the last 10 messages so we don't lose location/cuisine context 
+    const recentMasterHistory = (history || []).slice(-10);
+    const masterMessages = [...recentMasterHistory, { role: "User", content: currentMessage }];
     let intentClassificationOutput = await callLocalLLM(masterPrompt, masterMessages);
 
     // Clean potential markdown blocks like ```json ... ```
@@ -217,7 +219,9 @@ app.post('/api/chat', async (req, res) => {
       systemPrompt += `\n\n[CONVERSATION RULE: This is NOT the user's first message. Do NOT start with any greeting like "喂", "你好", "👋" or any welcoming phrase. Jump straight into your response naturally as a continuation of the conversation. Be concise and direct.]`;
     }
 
-    const messages = [...(history || []), { role: "User", content: currentMessage }];
+    // Token Saving: Keep a sliding window of the last 6 messages for the final reply
+    const recentReplyHistory = (history || []).slice(-6);
+    const messages = [...recentReplyHistory, { role: "User", content: currentMessage }];
     const finalReply = await callLocalLLM(systemPrompt, messages);
 
     res.json({
