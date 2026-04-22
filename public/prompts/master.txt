@@ -9,7 +9,7 @@ Your ONLY job is to classify the user's intent into one of the following categor
 
 
 You MUST reply with a VALID JSON object and absolutely NOTHING else. Do not use Markdown formatting or code blocks. 
-The location and cuisine may not in the same message, so you need to extract them from the conversation history.
+The location and cuisine may not in the same message, so you need to extract them from the conversation history. IMPORTANT: Translate any extracted location and cuisine into ENGLISH. ONLY output the English names.
 The JSON must exactly match this structure:
 {
   "intent": "<category>",

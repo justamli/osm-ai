@@ -194,12 +194,44 @@ app.post('/api/chat', async (req, res) => {
     const rawServiceData = await fetchServiceData(detectedIntent, masterJson?.keywords || []);
     let dynamicServiceData = typeof rawServiceData === 'object' ? JSON.stringify(rawServiceData, null, 2) : rawServiceData;
 
+    // Map Location and Cuisine to OpenRice IDs
+    let mappedDistrictId = null;
+    let mappedCuisineId = null;
+    
+    if (masterJson && (masterJson.location || masterJson.cuisine)) {
+      try {
+        const mappingsPath = path.join(__dirname, 'public', 'config', 'openrice_mappings.json');
+        const mappingsData = JSON.parse(await fs.readFile(mappingsPath, 'utf8'));
+        const normalize = (s) => (s || "").toLowerCase().replace(/[^a-z0-9]/g, '');
+        
+        if (masterJson.location && masterJson.location !== "unknown") {
+          const normLoc = normalize(masterJson.location);
+          const match = mappingsData.districts.find(d => {
+             const normName = normalize(d.name);
+             return normName === normLoc || (normName.length > 3 && normLoc.includes(normName)) || (normLoc.length > 3 && normName.includes(normLoc));
+          });
+          if (match) mappedDistrictId = match.searchKey;
+        }
+        
+        if (masterJson.cuisine && masterJson.cuisine !== "unknown") {
+          const normCuis = normalize(masterJson.cuisine);
+          const match = mappingsData.cuisines.find(c => {
+             const normName = normalize(c.name);
+             return normName === normCuis || (normName.length > 3 && normCuis.includes(normName)) || (normCuis.length > 3 && normName.includes(normCuis));
+          });
+          if (match) mappedCuisineId = match.searchKey;
+        }
+      } catch (e) {
+        console.warn("Failed to map OpenRice IDs:", e.message);
+      }
+    }
+
     // Append master metadata to dynamic service data if available
     if (masterJson) {
       let extractedData = [];
       if (masterJson.keywords && masterJson.keywords.length > 0) extractedData.push(`Keywords: ${masterJson.keywords.join(", ")}`);
-      if (masterJson.location) extractedData.push(`Location: ${masterJson.location}`);
-      if (masterJson.cuisine) extractedData.push(`Cuisine: ${masterJson.cuisine}`);
+      if (masterJson.location) extractedData.push(`Location: ${masterJson.location}${mappedDistrictId ? ` (${mappedDistrictId})` : ''}`);
+      if (masterJson.cuisine) extractedData.push(`Cuisine: ${masterJson.cuisine}${mappedCuisineId ? ` (${mappedCuisineId})` : ''}`);
 
       if (extractedData.length > 0) {
         dynamicServiceData += `\n\n[Extracted Data from User Status: ${extractedData.join(" | ")}]`;
