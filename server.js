@@ -133,7 +133,19 @@ app.post('/api/chat', async (req, res) => {
     console.log(currentMessage);
     // Layer 1: Master Layer - Intent Classification
     const masterPromptPath = path.join(__dirname, 'public', 'prompts', 'master.txt');
-    const masterPrompt = await fs.readFile(masterPromptPath, 'utf8');
+    let masterPrompt = await fs.readFile(masterPromptPath, 'utf8');
+
+    // Supply the LLM with valid map options so it properly translates Chinese to exact English OpenRice names
+    try {
+      const mappingsPath = path.join(__dirname, 'public', 'config', 'openrice_mappings.json');
+      const mappingsData = JSON.parse(await fs.readFile(mappingsPath, 'utf8'));
+      const validDistricts = mappingsData.districts.map(d => d.name).join(", ");
+      const validCuisines = mappingsData.cuisines.map(c => c.name).join(", ");
+      
+      masterPrompt += `\n\nCRITICAL: If the user specified a location or cuisine in Chinese (e.g., "大澳"), you MUST translate and match it to its official English name from the following valid lists. Do NOT invent your own phonetic translations (like "Daa Mau"):\nValid Locations: ${validDistricts}\nValid Cuisines: ${validCuisines}`;
+    } catch (e) {
+      console.warn("Could not load mappings for prompt injection:", e.message);
+    }
 
     // Token Saving: Keep the last 10 messages so we don't lose location/cuisine context 
     const recentMasterHistory = (history || []).slice(-10);
