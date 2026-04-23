@@ -443,6 +443,8 @@ navRestaurants.addEventListener('click', (e) => {
 // Restaurant Table Rendering
 const tbody = document.getElementById('restaurants-tbody');
 let currentRestaurantsData = [];
+let currentSortColumn = 'id';
+let currentSortDirection = 'asc';
 
 async function loadRestaurants() {
     try {
@@ -455,15 +457,48 @@ async function loadRestaurants() {
 }
 
 function renderRestaurantsTable() {
+    // Sort logic
+    const sortedData = [...currentRestaurantsData].sort((a, b) => {
+        let valA = a[currentSortColumn];
+        let valB = b[currentSortColumn];
+
+        // Handle nulls
+        if (valA === null || valA === undefined) valA = '';
+        if (valB === null || valB === undefined) valB = '';
+
+        // If numeric
+        if (typeof valA === 'number' && typeof valB === 'number') {
+            return currentSortDirection === 'asc' ? valA - valB : valB - valA;
+        }
+
+        // Default to string comparison
+        valA = valA.toString().toLowerCase();
+        valB = valB.toString().toLowerCase();
+
+        if (valA < valB) return currentSortDirection === 'asc' ? -1 : 1;
+        if (valA > valB) return currentSortDirection === 'asc' ? 1 : -1;
+        return 0;
+    });
+
     tbody.innerHTML = '';
-    if (currentRestaurantsData.length === 0) {
+    
+    // Update header UI
+    document.querySelectorAll('#restaurants-table th.sortable').forEach(th => {
+        const col = th.getAttribute('data-sort');
+        th.classList.remove('active-sort', 'asc', 'desc');
+        if (col === currentSortColumn) {
+            th.classList.add('active-sort', currentSortDirection);
+        }
+    });
+
+    if (sortedData.length === 0) {
         const tr = document.createElement('tr');
         tr.innerHTML = `<td colspan="7" style="text-align: center; color: var(--text-secondary);">No restaurants found. Add one or import CSV.</td>`;
         tbody.appendChild(tr);
         return;
     }
 
-    currentRestaurantsData.forEach(r => {
+    sortedData.forEach(r => {
         const tr = document.createElement('tr');
         
         // Options badges
@@ -492,11 +527,25 @@ function renderRestaurantsTable() {
     document.querySelectorAll('.edit-resto-btn').forEach(btn => {
         btn.addEventListener('click', () => openRestaurantModal(btn.getAttribute('data-id')));
     });
-    
+
     document.querySelectorAll('.delete-resto-btn').forEach(btn => {
         btn.addEventListener('click', () => deleteRestaurant(btn.getAttribute('data-id')));
     });
 }
+
+// Add header click listeners for sorting
+document.querySelectorAll('#restaurants-table th.sortable').forEach(th => {
+    th.addEventListener('click', () => {
+        const column = th.getAttribute('data-sort');
+        if (currentSortColumn === column) {
+            currentSortDirection = currentSortDirection === 'asc' ? 'desc' : 'asc';
+        } else {
+            currentSortColumn = column;
+            currentSortDirection = 'asc';
+        }
+        renderRestaurantsTable();
+    });
+});
 
 // Modal Logic
 const restoModal = document.getElementById('restaurant-modal');

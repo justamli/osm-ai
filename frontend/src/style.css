@@ -772,6 +772,43 @@ textarea::placeholder {
   font-size: 0.9rem;
   text-transform: uppercase;
   letter-spacing: 0.5px;
+  position: relative;
+}
+
+.data-table th.sortable {
+  cursor: pointer;
+  user-select: none;
+  transition: all 0.2s;
+  padding-right: 30px;
+}
+
+.data-table th.sortable:hover {
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--text-primary);
+}
+
+.data-table th.sortable.active-sort {
+  color: var(--accent-color);
+  background: rgba(99, 102, 241, 0.05);
+}
+
+.data-table th.sortable::after {
+  content: '↕';
+  position: absolute;
+  right: 12px;
+  opacity: 0.2;
+  font-size: 0.8rem;
+  transition: all 0.2s;
+}
+
+.data-table th.sortable.active-sort.asc::after {
+  content: '↑';
+  opacity: 1;
+}
+
+.data-table th.sortable.active-sort.desc::after {
+  content: '↓';
+  opacity: 1;
 }
 
 .data-table tbody tr {
