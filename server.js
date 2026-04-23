@@ -3,8 +3,13 @@ import cors from 'cors';
 import fs from 'fs/promises';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import multer from 'multer';
+import csvParser from 'csv-parser';
+import { Readable } from 'stream';
+import { queryAll, queryGet, queryRun } from './database.js';
 
 const __filename = fileURLToPath(import.meta.url);
+const upload = multer({ storage: multer.memoryStorage() });
 const __dirname = path.dirname(__filename);
 
 const app = express();
@@ -97,14 +102,14 @@ async function fetchWeatherData(location) {
     const url = `https://data.weather.gov.hk/weatherAPI/opendata/weather.php?dataType=rhrread&lang=en`;
     const res = await fetch(url);
     if (!res.ok) {
-        throw new Error(`HKO API returned ${res.status}`);
+      throw new Error(`HKO API returned ${res.status}`);
     }
 
     const data = await res.json();
-    
+
     // Normalize user location for matching
     const normLoc = location.toLowerCase();
-    
+
     // Helper to find the matching place in an HKO data array
     const findPlaceData = (arr) => {
       if (!arr || !Array.isArray(arr)) return null;
@@ -120,11 +125,11 @@ async function fetchWeatherData(location) {
     const tempMatch = findPlaceData(data.temperature?.data);
     const humMatch = findPlaceData(data.humidity?.data);
     const rainMatch = findPlaceData(data.rainfall?.data);
-    
+
     // Prepare the special tips / warnings if any
     const warnings = Array.isArray(data.warningMessage) ? data.warningMessage.join(" ") : (data.warningMessage || "");
     const specialTips = Array.isArray(data.specialWxTips) ? data.specialWxTips.join(" ") : (data.specialWxTips || "");
-    
+
     let condition = [];
     if (warnings) condition.push(`Warning: ${warnings}`);
     if (specialTips) condition.push(`Tips: ${specialTips}`);
@@ -298,14 +303,14 @@ app.post('/api/chat', async (req, res) => {
     if (masterJson) {
       let extractedData = [];
       if (masterJson.keywords && masterJson.keywords.length > 0) extractedData.push(`Keywords: ${masterJson.keywords.join(", ")}`);
-      
+
       const locStr = String(masterJson.location || "").toLowerCase();
       if (masterJson.location && locStr !== "unknown" && locStr !== "null") {
         extractedData.push(`Location: ${masterJson.location}${mappedDistrictId ? ` (${mappedDistrictId})` : ''}`);
       } else {
         extractedData.push(`Location: null`);
       }
-      
+
       const cuisStr = String(masterJson.cuisine || "").toLowerCase();
       if (masterJson.cuisine && cuisStr !== "unknown" && cuisStr !== "null") {
         extractedData.push(`Cuisine: ${masterJson.cuisine}${mappedCuisineId ? ` (${mappedCuisineId})` : ''}`);
@@ -488,6 +493,126 @@ You MUST reply with a VALID JSON object and absolutely NOTHING else. Do not use 
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
+});
+
+// --- RESTAURANT DATASTORE API ---
+
+app.get('/api/restaurants', async (req, res) => {
+  try {
+    const restaurants = await queryAll('SELECT * FROM restaurants ORDER BY id DESC');
+    res.json(restaurants);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.get('/api/restaurants/:id', async (req, res) => {
+  try {
+    const r = await queryGet('SELECT * FROM restaurants WHERE id = ?', [req.params.id]);
+    if (r) res.json(r);
+    else res.status(404).json({ error: 'Not found' });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.post('/api/restaurants', async (req, res) => {
+  try {
+    const { region, rating, tag, name, phone_number, address, description, booking_available, queuing_available, phone_order_available } = req.body;
+    const result = await queryRun(
+      `INSERT INTO restaurants (region, rating, tag, name, phone_number, address, description, booking_available, queuing_available, phone_order_available) 
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      [region, rating, tag, name, phone_number, address, description, booking_available, queuing_available, phone_order_available]
+    );
+    res.status(201).json({ id: result.lastID });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.put('/api/restaurants/:id', async (req, res) => {
+  try {
+    const { region, rating, tag, name, phone_number, address, description, booking_available, queuing_available, phone_order_available } = req.body;
+    const result = await queryRun(
+      `UPDATE restaurants SET region=?, rating=?, tag=?, name=?, phone_number=?, address=?, description=?, booking_available=?, queuing_available=?, phone_order_available=? WHERE id=?`,
+      [region, rating, tag, name, phone_number, address, description, booking_available, queuing_available, phone_order_available, req.params.id]
+    );
+    if (result.changes > 0) res.json({ success: true });
+    else res.status(404).json({ error: 'Not found' });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.delete('/api/restaurants/:id', async (req, res) => {
+  try {
+    const result = await queryRun('DELETE FROM restaurants WHERE id = ?', [req.params.id]);
+    if (result.changes > 0) res.json({ success: true });
+    else res.status(404).json({ error: 'Not found' });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.post('/api/restaurants/import', upload.single('file'), async (req, res) => {
+  if (!req.file) return res.status(400).json({ error: 'No file uploaded' });
+
+  const results = [];
+  const stream = Readable.from(req.file.buffer.toString());
+
+  stream.pipe(csvParser())
+    .on('data', (data) => results.push(data))
+    .on('end', async () => {
+      try {
+        // Collect all unique labels for translation
+        const regionsToTranslate = results.map(r => r.地區 || r.region || r.REGION).filter(Boolean);
+        const tagsToTranslate = results.map(r => r.Tag || r.tag || r.TAG).filter(Boolean);
+
+        const translations = await bulkTranslate([...regionsToTranslate, ...tagsToTranslate]);
+
+        let inserted = 0;
+        const isTrue = (val) => val && (val.toUpperCase() === 'X' || val === 'true' || val === '1' || val === 'checked');
+
+        for (const row of results) {
+          try {
+            const rawName = row.餐廳名稱 || row.name || row.Name || row.NAME;
+            if (!rawName) continue;
+
+            const rawRegion = row.地區 || row.region || row.REGION || null;
+            const rawTag = row.Tag || row.tag || row.TAG || null;
+
+            const translatedRegion = translations[rawRegion] || rawRegion;
+            const translatedTag = translations[rawTag] || rawTag;
+
+            await queryRun(
+              `INSERT INTO restaurants (region, rating, tag, name, phone_number, address, description, booking_available, queuing_available, phone_order_available) 
+               VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+              [
+                translatedRegion,
+                parseFloat(row.Google評分 || row.rating || row.RATING || '0'),
+                translatedTag,
+                rawName,
+                row.phone_number || row['PHONE NUMBER'] || null,
+                row.address || row.ADDRESS || null,
+                row.點解推介呢間餐廳 || row.description || row.DESCRIPTION || null,
+                isTrue(row.訂座 || row.booking_available || row.BOOKING_AVAILABLE),
+                isTrue(row.排隊 || row.queuing_available || row.QUENING_AVAILABLE),
+                isTrue(row.外賣 || row.phone_order_available || row.PHONE_ORDER_AVALIABLE)
+              ]
+            );
+            inserted++;
+          } catch (e) {
+            console.error("Error inserting CSV row", e.message, row);
+          }
+        }
+        res.json({ success: true, count: inserted });
+      } catch (err) {
+        res.status(500).json({ error: err.message });
+      }
+    })
+    .on('error', (error) => {
+      res.status(500).json({ error: error.message });
+    });
 });
 
 app.listen(PORT, '0.0.0.0', () => {

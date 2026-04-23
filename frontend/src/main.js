@@ -399,3 +399,234 @@ addIntentBtn.addEventListener('click', async () => {
         alert("Failed to create new intent.");
     }
 });
+
+// --- RESTAURANTS DOM LOGIC ---
+const navChat = document.getElementById('nav-chat');
+const navRestaurants = document.getElementById('nav-restaurants');
+const chatAreaMain = document.querySelector('.chat-area');
+const chatInputArea = document.getElementById('chat-input-area');
+const restaurantsArea = document.getElementById('restaurants-area');
+
+const API_RESTAURANTS = `http://${window.location.hostname}:3000/api/restaurants`;
+
+// Tab Switching
+navChat.addEventListener('click', (e) => {
+    e.preventDefault();
+    navChat.classList.add('active');
+    navRestaurants.classList.remove('active');
+    
+    // show chat
+    chatAreaMain.style.display = 'flex';
+    document.querySelector('.chat-header').style.display = 'flex';
+    chatMessages.style.display = 'flex';
+    chatInputArea.style.display = 'block';
+    
+    // hide restos
+    restaurantsArea.classList.add('hidden');
+});
+
+navRestaurants.addEventListener('click', (e) => {
+    e.preventDefault();
+    navRestaurants.classList.add('active');
+    navChat.classList.remove('active');
+    
+    // hide chat
+    document.querySelector('.chat-header').style.display = 'none';
+    chatMessages.style.display = 'none';
+    chatInputArea.style.display = 'none';
+    
+    // show restos
+    restaurantsArea.classList.remove('hidden');
+    loadRestaurants();
+});
+
+// Restaurant Table Rendering
+const tbody = document.getElementById('restaurants-tbody');
+let currentRestaurantsData = [];
+
+async function loadRestaurants() {
+    try {
+        const res = await fetch(API_RESTAURANTS);
+        currentRestaurantsData = await res.json();
+        renderRestaurantsTable();
+    } catch (e) {
+        console.error("Failed to load restaurants", e);
+    }
+}
+
+function renderRestaurantsTable() {
+    tbody.innerHTML = '';
+    if (currentRestaurantsData.length === 0) {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `<td colspan="7" style="text-align: center; color: var(--text-secondary);">No restaurants found. Add one or import CSV.</td>`;
+        tbody.appendChild(tr);
+        return;
+    }
+
+    currentRestaurantsData.forEach(r => {
+        const tr = document.createElement('tr');
+        
+        // Options badges
+        let optionsHtml = '';
+        if (r.booking_available) optionsHtml += `<span class="status-badge">Booking</span>`;
+        if (r.queuing_available) optionsHtml += `<span class="status-badge">Queuing</span>`;
+        if (r.phone_order_available) optionsHtml += `<span class="status-badge">Phone Order</span>`;
+        
+        tr.innerHTML = `
+            <td>${r.id}</td>
+            <td style="font-weight: 500;">${r.name || 'N/A'}</td>
+            <td>${r.region || 'N/A'}</td>
+            <td>${r.rating ? r.rating.toFixed(1) : 'N/A'}</td>
+            <td>${r.tag || 'N/A'}</td>
+            <td>${r.phone_number || 'N/A'}</td>
+            <td>${optionsHtml}</td>
+            <td>
+                <button class="icon-btn-small edit-resto-btn" data-id="${r.id}" title="Edit"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg></button>
+                <button class="icon-btn-small delete-resto-btn" data-id="${r.id}" style="color: #f87171;" title="Delete"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg></button>
+            </td>
+        `;
+        tbody.appendChild(tr);
+    });
+
+    // attach events
+    document.querySelectorAll('.edit-resto-btn').forEach(btn => {
+        btn.addEventListener('click', () => openRestaurantModal(btn.getAttribute('data-id')));
+    });
+    
+    document.querySelectorAll('.delete-resto-btn').forEach(btn => {
+        btn.addEventListener('click', () => deleteRestaurant(btn.getAttribute('data-id')));
+    });
+}
+
+// Modal Logic
+const restoModal = document.getElementById('restaurant-modal');
+const restoForm = document.getElementById('restaurant-form');
+const addRestoBtn = document.getElementById('add-restaurant-btn');
+const closeRestoModalBtn = document.getElementById('close-restaurant-modal-btn');
+const cancelRestoBtn = document.getElementById('cancel-resto-btn');
+
+addRestoBtn.addEventListener('click', () => {
+    openRestaurantModal();
+});
+
+closeRestoModalBtn.addEventListener('click', () => restoModal.classList.add('hidden'));
+cancelRestoBtn.addEventListener('click', () => restoModal.classList.add('hidden'));
+
+function openRestaurantModal(id = null) {
+    restoForm.reset();
+    document.getElementById('resto-id').value = '';
+    document.getElementById('restaurant-modal-title').textContent = id ? 'Edit Restaurant' : 'Add Restaurant';
+    
+    if (id) {
+        const r = currentRestaurantsData.find(x => x.id == id);
+        if (r) {
+            document.getElementById('resto-id').value = r.id;
+            document.getElementById('resto-name').value = r.name || '';
+            document.getElementById('resto-region').value = r.region || '';
+            document.getElementById('resto-rating').value = r.rating || '';
+            document.getElementById('resto-tag').value = r.tag || '';
+            document.getElementById('resto-phone').value = r.phone_number || '';
+            document.getElementById('resto-address').value = r.address || '';
+            document.getElementById('resto-desc').value = r.description || '';
+            document.getElementById('resto-booking').checked = r.booking_available;
+            document.getElementById('resto-queuing').checked = r.queuing_available;
+            document.getElementById('resto-phone-order').checked = r.phone_order_available;
+        }
+    }
+    
+    restoModal.classList.remove('hidden');
+}
+
+restoForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const id = document.getElementById('resto-id').value;
+    
+    const payload = {
+        name: document.getElementById('resto-name').value,
+        region: document.getElementById('resto-region').value,
+        rating: parseFloat(document.getElementById('resto-rating').value) || 0,
+        tag: document.getElementById('resto-tag').value,
+        phone_number: document.getElementById('resto-phone').value,
+        address: document.getElementById('resto-address').value,
+        description: document.getElementById('resto-desc').value,
+        booking_available: document.getElementById('resto-booking').checked,
+        queuing_available: document.getElementById('resto-queuing').checked,
+        phone_order_available: document.getElementById('resto-phone-order').checked
+    };
+    
+    try {
+        const url = id ? `${API_RESTAURANTS}/${id}` : API_RESTAURANTS;
+        const method = id ? 'PUT' : 'POST';
+        
+        const res = await fetch(url, {
+            method,
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        });
+        
+        if (res.ok) {
+            restoModal.classList.add('hidden');
+            loadRestaurants();
+        } else {
+            alert('Error saving restaurant');
+        }
+    } catch (e) {
+        console.error(e);
+        alert('Network error saving restaurant');
+    }
+});
+
+async function deleteRestaurant(id) {
+    if (!confirm('Delete this restaurant?')) return;
+    try {
+        const res = await fetch(`${API_RESTAURANTS}/${id}`, { method: 'DELETE' });
+        if (res.ok) {
+            loadRestaurants();
+        } else {
+            alert('Error deleting');
+        }
+    } catch (e) {
+        console.error(e);
+    }
+}
+
+// CSV Logic
+const importCsvBtn = document.getElementById('import-csv-btn');
+const csvInput = document.getElementById('csv-upload-input');
+
+importCsvBtn.addEventListener('click', () => {
+    csvInput.click();
+});
+
+csvInput.addEventListener('change', async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    
+    const formData = new FormData();
+    formData.append('file', file);
+    
+    importCsvBtn.textContent = 'Uploading...';
+    importCsvBtn.disabled = true;
+    
+    try {
+        const res = await fetch(`${API_RESTAURANTS}/import`, {
+            method: 'POST',
+            body: formData
+        });
+        
+        const data = await res.json();
+        if (res.ok) {
+            alert(`Successfully imported ${data.count} restaurants!`);
+            loadRestaurants();
+        } else {
+            alert(`Error: ${data.error}`);
+        }
+    } catch (err) {
+        console.error(err);
+        alert('Network error importing CSV');
+    } finally {
+        importCsvBtn.textContent = 'Import CSV';
+        importCsvBtn.disabled = false;
+        csvInput.value = ''; // reset
+    }
+});
