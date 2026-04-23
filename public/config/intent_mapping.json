@@ -3,14 +3,6 @@
     "system_prompt_file": "prompts/greeting.txt",
     "service_data": "greeting"
   },
-  "restaurant": {
-    "system_prompt_file": "prompts/restaurant.txt",
-    "service_data": "restaurant"
-  },
-  "weather": {
-    "system_prompt_file": "prompts/weather.txt",
-    "service_data": "weather"
-  },
   "default": {
     "system_prompt_file": "prompts/default.txt",
     "service_data": "none"
@@ -26,5 +18,13 @@
   "stock": {
     "system_prompt_file": "prompts/stock.txt",
     "service_data": "stock"
+  },
+  "ailaweather": {
+    "system_prompt_file": "prompts/ailaweather.txt",
+    "service_data": "ailaweather"
+  },
+  "ailasearch": {
+    "system_prompt_file": "prompts/ailasearch.txt",
+    "service_data": "ailasearch"
   }
 }

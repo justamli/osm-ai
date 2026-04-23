@@ -14,8 +14,8 @@ app.use(express.json());
 const PORT = process.env.PORT || 3000;
 
 // Update this to point to the local LM API
-//const LLM_API_URL = 'http://192.168.105.136:1234/api/v1/chat';
-const LLM_API_URL = 'http://127.0.0.1:1234/api/v1/chat';
+const LLM_API_URL = 'http://192.168.105.136:1234/api/v1/chat';
+//const LLM_API_URL = 'http://127.0.0.1:1234/api/v1/chat';
 const MODEL_NAME = 'gemma-4-e4b-it';
 
 async function callLocalLLM(systemPrompt, userMessages) {
@@ -84,21 +84,31 @@ async function fetchStockData(keywords) {
 }
 
 // 1. Service Layer Data Fetching (Mocked Database/Internet lookups)
-async function fetchServiceData(intent, keywords = []) {
+async function fetchServiceData(intent, masterJson = {}) {
+  const keywords = masterJson.keywords || [];
   if (intent === 'stock') {
     return await fetchStockData(keywords);
   }
-  if (intent === 'weather') {
+  if (intent === 'ailaweather') {
+    const loc = masterJson.location;
+    const locStr = String(loc || "").toLowerCase();
+    if (!loc || locStr === 'unknown' || locStr === 'null') {
+      return {
+        status: "missing_information",
+        location: null,
+        message: "No specific location provided by user."
+      };
+    }
     // Simulating grep from internet / real API call
     return {
       status: "success",
-      location: "New York",
+      location: loc,
       temperature: "72°F",
       condition: "Sunny with light breeze",
       forecast: "Rain expected tomorrow"
     };
   }
-  if (intent === 'restaurant') {
+  if (intent === 'ailasearch') {
     return {
       status: "success",
       trending: "The Azure Lounge",
@@ -141,7 +151,7 @@ app.post('/api/chat', async (req, res) => {
       const mappingsData = JSON.parse(await fs.readFile(mappingsPath, 'utf8'));
       const validDistricts = mappingsData.districts.map(d => d.name).join(", ");
       const validCuisines = mappingsData.cuisines.map(c => c.name).join(", ");
-      
+
       masterPrompt += `\n\nCRITICAL: If the user specified a location or cuisine in Chinese (e.g., "大澳"), you MUST translate and match it to its official English name from the following valid lists. Do NOT invent your own phonetic translations (like "Daa Mau"):\nValid Locations: ${validDistricts}\nValid Cuisines: ${validCuisines}`;
     } catch (e) {
       console.warn("Could not load mappings for prompt injection:", e.message);
@@ -172,7 +182,7 @@ app.post('/api/chat', async (req, res) => {
       for (let i = history.length - 1; i >= 0; i--) {
         if (history[i].role === "User") {
           const histIntent = history[i].intent || 'default';
-          if (histIntent !== 'restaurant') {
+          if (histIntent !== 'ailasearch') {
             offTopicCount++;
           } else {
             break;
@@ -181,7 +191,7 @@ app.post('/api/chat', async (req, res) => {
       }
     }
 
-    if (detectedIntent !== 'restaurant') {
+    if (detectedIntent !== 'ailasearch') {
       offTopicCount++;
 
       if (offTopicCount >= 3) {
@@ -203,33 +213,33 @@ app.post('/api/chat', async (req, res) => {
     }
 
     // Fetch real service data (simulated database/internet lookup)
-    const rawServiceData = await fetchServiceData(detectedIntent, masterJson?.keywords || []);
+    const rawServiceData = await fetchServiceData(detectedIntent, masterJson || {});
     let dynamicServiceData = typeof rawServiceData === 'object' ? JSON.stringify(rawServiceData, null, 2) : rawServiceData;
 
     // Map Location and Cuisine to OpenRice IDs
     let mappedDistrictId = null;
     let mappedCuisineId = null;
-    
+
     if (masterJson && (masterJson.location || masterJson.cuisine)) {
       try {
         const mappingsPath = path.join(__dirname, 'public', 'config', 'openrice_mappings.json');
         const mappingsData = JSON.parse(await fs.readFile(mappingsPath, 'utf8'));
         const normalize = (s) => (s || "").toLowerCase().replace(/[^a-z0-9]/g, '');
-        
+
         if (masterJson.location && masterJson.location !== "unknown") {
           const normLoc = normalize(masterJson.location);
           const match = mappingsData.districts.find(d => {
-             const normName = normalize(d.name);
-             return normName === normLoc || (normName.length > 3 && normLoc.includes(normName)) || (normLoc.length > 3 && normName.includes(normLoc));
+            const normName = normalize(d.name);
+            return normName === normLoc || (normName.length > 3 && normLoc.includes(normName)) || (normLoc.length > 3 && normName.includes(normLoc));
           });
           if (match) mappedDistrictId = match.searchKey;
         }
-        
+
         if (masterJson.cuisine && masterJson.cuisine !== "unknown") {
           const normCuis = normalize(masterJson.cuisine);
           const match = mappingsData.cuisines.find(c => {
-             const normName = normalize(c.name);
-             return normName === normCuis || (normName.length > 3 && normCuis.includes(normName)) || (normCuis.length > 3 && normName.includes(normCuis));
+            const normName = normalize(c.name);
+            return normName === normCuis || (normName.length > 3 && normCuis.includes(normName)) || (normCuis.length > 3 && normName.includes(normCuis));
           });
           if (match) mappedCuisineId = match.searchKey;
         }
@@ -242,8 +252,20 @@ app.post('/api/chat', async (req, res) => {
     if (masterJson) {
       let extractedData = [];
       if (masterJson.keywords && masterJson.keywords.length > 0) extractedData.push(`Keywords: ${masterJson.keywords.join(", ")}`);
-      if (masterJson.location) extractedData.push(`Location: ${masterJson.location}${mappedDistrictId ? ` (${mappedDistrictId})` : ''}`);
-      if (masterJson.cuisine) extractedData.push(`Cuisine: ${masterJson.cuisine}${mappedCuisineId ? ` (${mappedCuisineId})` : ''}`);
+      
+      const locStr = String(masterJson.location || "").toLowerCase();
+      if (masterJson.location && locStr !== "unknown" && locStr !== "null") {
+        extractedData.push(`Location: ${masterJson.location}${mappedDistrictId ? ` (${mappedDistrictId})` : ''}`);
+      } else {
+        extractedData.push(`Location: null`);
+      }
+      
+      const cuisStr = String(masterJson.cuisine || "").toLowerCase();
+      if (masterJson.cuisine && cuisStr !== "unknown" && cuisStr !== "null") {
+        extractedData.push(`Cuisine: ${masterJson.cuisine}${mappedCuisineId ? ` (${mappedCuisineId})` : ''}`);
+      } else {
+        extractedData.push(`Cuisine: null`);
+      }
 
       if (extractedData.length > 0) {
         dynamicServiceData += `\n\n[Extracted Data from User Status: ${extractedData.join(" | ")}]`;
