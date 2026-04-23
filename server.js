@@ -150,6 +150,74 @@ async function fetchWeatherData(location) {
   }
 }
 
+// --- Restaurant Search Feature (SQLite Database) ---
+async function fetchRestaurantData(masterJson = {}) {
+  try {
+    const location = masterJson.location;
+    const cuisine = masterJson.cuisine;
+
+    let sql = 'SELECT * FROM restaurants WHERE 1=1';
+    const params = [];
+
+    const isValid = (val) => val && !['unknown', 'null', ''].includes(String(val).toLowerCase().trim());
+
+    if (isValid(location)) {
+      sql += ' AND region LIKE ?';
+      params.push(`%${location}%`);
+    }
+
+    if (isValid(cuisine)) {
+      sql += ' AND tag LIKE ?';
+      params.push(`%${cuisine}%`);
+    }
+
+    sql += ' ORDER BY rating DESC LIMIT 5';
+
+    const results = await queryAll(sql, params);
+
+    const dbEnToZhRegion = {
+      "Central": "中環", "Tsim Sha Tsui": "尖沙咀", "Causeway Bay": "銅鑼灣",
+      "Mong Kok": "旺角", "Sham Shui Po": "深水埗", "Kowloon City": "九龍城",
+      "Yuen Long": "元朗", "Tsuen Wan": "荃灣", "Sha Tin": "沙田",
+      "Wan Chai": "灣仔", "Sai Wan": "西環", "Sheung Wan": "上環",
+      "Tai Po": "大埔", "Kwun Tong": "觀塘", "North Point": "北角",
+      "Tuen Mun": "屯門", "Tseung Kwan O": "將軍澳", "Sai Kung": "西貢",
+      "Stanley": "赤柱", "Tin Shui Wai": "天水圍"
+    };
+
+    const formatRestaurants = (restaurants) => {
+      return restaurants.map(r => ({
+        ...r,
+        region: dbEnToZhRegion[r.region] || r.region,
+        tag: r.tag.replace("Japanese", "日本菜").replace("Thai", "泰國菜").replace("Dessert", "甜品").replace("Dim Sum", "點心") 
+      }));
+    };
+
+    if (results.length === 0) {
+      // Fallback: return top-rated restaurants across all regions
+      const fallback = await queryAll('SELECT * FROM restaurants ORDER BY rating DESC LIMIT 5');
+      return {
+        status: "no_match",
+        searched_location: location || null,
+        searched_cuisine: cuisine || null,
+        message: "No restaurants matched the specific filters. Here are some top-rated alternatives.",
+        restaurants: formatRestaurants(fallback)
+      };
+    }
+
+    return {
+      status: "success",
+      searched_location: location || null,
+      searched_cuisine: cuisine || null,
+      result_count: results.length,
+      restaurants: formatRestaurants(results)
+    };
+  } catch (error) {
+    console.error("Restaurant search failed:", error);
+    return { status: "error", message: error.message };
+  }
+}
+
 // 1. Service Layer Data Fetching (Mocked Database/Internet lookups)
 async function fetchServiceData(intent, masterJson = {}) {
   const keywords = masterJson.keywords || [];
@@ -160,12 +228,7 @@ async function fetchServiceData(intent, masterJson = {}) {
     return await fetchWeatherData(masterJson.location);
   }
   if (intent === 'ailasearch') {
-    return {
-      status: "success",
-      trending: "The Azure Lounge",
-      rating: 4.8,
-      cuisine: "Mediterranean"
-    };
+    return await fetchRestaurantData(masterJson);
   }
   if (intent === 'greeting') {
     return {
@@ -196,16 +259,17 @@ app.post('/api/chat', async (req, res) => {
     const masterPromptPath = path.join(__dirname, 'public', 'prompts', 'master.txt');
     let masterPrompt = await fs.readFile(masterPromptPath, 'utf8');
 
-    // Supply the LLM with valid map options so it properly translates Chinese to exact English OpenRice names
+    // Supply the LLM with valid map options so it properly translates Chinese to exact English names
     try {
-      const mappingsPath = path.join(__dirname, 'public', 'config', 'openrice_mappings.json');
-      const mappingsData = JSON.parse(await fs.readFile(mappingsPath, 'utf8'));
-      const validDistricts = mappingsData.districts.map(d => d.name).join(", ");
-      const validCuisines = mappingsData.cuisines.map(c => c.name).join(", ");
+      const regionsList = await queryAll('SELECT DISTINCT region FROM restaurants WHERE region IS NOT NULL AND region != ""');
+      const tagsList = await queryAll('SELECT DISTINCT tag FROM restaurants WHERE tag IS NOT NULL AND tag != ""');
+      
+      const validDistricts = regionsList.map(r => r.region).join(", ");
+      const validCuisines = tagsList.map(t => t.tag).join(", ");
 
-      masterPrompt += `\n\nCRITICAL: If the user specified a location or cuisine in Chinese (e.g., "大澳"), you MUST translate and match it to its official English name from the following valid lists. Do NOT invent your own phonetic translations (like "Daa Mau"):\nValid Locations: ${validDistricts}\nValid Cuisines: ${validCuisines}`;
+      masterPrompt += `\n\nCRITICAL: If the user specified a location or cuisine in Chinese (e.g., "大澳"), you MUST translate and match it to its official English name from the following valid lists:\nValid Locations: ${validDistricts}\nValid Cuisines: ${validCuisines}`;
     } catch (e) {
-      console.warn("Could not load mappings for prompt injection:", e.message);
+      console.warn("Could not load DB mappings for prompt injection:", e.message);
     }
 
     // Token Saving: Keep the last 10 messages so we don't lose location/cuisine context 
