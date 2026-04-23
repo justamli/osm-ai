@@ -83,6 +83,68 @@ async function fetchStockData(keywords) {
   }
 }
 
+// --- Weather Fetcher Feature (HKO Open Data API) ---
+async function fetchWeatherData(location) {
+  try {
+    if (!location || location.toLowerCase() === 'unknown' || location.toLowerCase() === 'null') {
+      return {
+        status: "missing_information",
+        location: null,
+        message: "No specific location provided by user."
+      };
+    }
+
+    const url = `https://data.weather.gov.hk/weatherAPI/opendata/weather.php?dataType=rhrread&lang=en`;
+    const res = await fetch(url);
+    if (!res.ok) {
+        throw new Error(`HKO API returned ${res.status}`);
+    }
+
+    const data = await res.json();
+    
+    // Normalize user location for matching
+    const normLoc = location.toLowerCase();
+    
+    // Helper to find the matching place in an HKO data array
+    const findPlaceData = (arr) => {
+      if (!arr || !Array.isArray(arr)) return null;
+      // Try exact or partial match for the user's intent location
+      let match = arr.find(d => d.place && d.place.toLowerCase().includes(normLoc));
+      if (!match) {
+        // Fallback to HK Observatory or default if district match fails
+        match = arr.find(d => d.place && d.place.toLowerCase().includes('hong kong observatory')) || arr[0];
+      }
+      return match;
+    };
+
+    const tempMatch = findPlaceData(data.temperature?.data);
+    const humMatch = findPlaceData(data.humidity?.data);
+    const rainMatch = findPlaceData(data.rainfall?.data);
+    
+    // Prepare the special tips / warnings if any
+    const warnings = Array.isArray(data.warningMessage) ? data.warningMessage.join(" ") : (data.warningMessage || "");
+    const specialTips = Array.isArray(data.specialWxTips) ? data.specialWxTips.join(" ") : (data.specialWxTips || "");
+    
+    let condition = [];
+    if (warnings) condition.push(`Warning: ${warnings}`);
+    if (specialTips) condition.push(`Tips: ${specialTips}`);
+    if (condition.length === 0) condition.push("General condition: Normal");
+
+    return {
+      status: "success",
+      source: "HKO Open Data API",
+      queried_location: location,
+      matched_station: tempMatch ? tempMatch.place : "Unknown",
+      temperature: tempMatch ? `${tempMatch.value}°${tempMatch.unit}` : "N/A",
+      humidity: humMatch ? `${humMatch.value}%` : "N/A",
+      rainfall_max_past_hour: rainMatch && rainMatch.max !== undefined ? `${rainMatch.max} mm` : "N/A",
+      alerts_and_tips: condition.join(" | ")
+    };
+  } catch (error) {
+    return { status: "error", message: error.message };
+  }
+}
+
 // 1. Service Layer Data Fetching (Mocked Database/Internet lookups)
 async function fetchServiceData(intent, masterJson = {}) {
   const keywords = masterJson.keywords || [];
@@ -90,23 +152,7 @@ async function fetchServiceData(intent, masterJson = {}) {
     return await fetchStockData(keywords);
   }
   if (intent === 'ailaweather') {
-    const loc = masterJson.location;
-    const locStr = String(loc || "").toLowerCase();
-    if (!loc || locStr === 'unknown' || locStr === 'null') {
-      return {
-        status: "missing_information",
-        location: null,
-        message: "No specific location provided by user."
-      };
-    }
-    // Simulating grep from internet / real API call
-    return {
-      status: "success",
-      location: loc,
-      temperature: "72°F",
-      condition: "Sunny with light breeze",
-      forecast: "Rain expected tomorrow"
-    };
+    return await fetchWeatherData(masterJson.location);
   }
   if (intent === 'ailasearch') {
     return {
