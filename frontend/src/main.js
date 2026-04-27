@@ -215,7 +215,7 @@ const saveStatus = document.getElementById('save-status');
 let currentPrompts = {};
 let activeIntent = null;
 
-const PROMPT_API = `http://${window.location.hostname}:3000/api/prompts`;
+const PROMPT_API = `http://${window.location.hostname}:3001/api/prompts`;
 
 settingsBtn.addEventListener('click', (e) => {
     e.preventDefault();
@@ -403,7 +403,7 @@ const chatAreaMain = document.querySelector('.chat-area');
 const chatInputArea = document.getElementById('chat-input-area');
 const restaurantsArea = document.getElementById('restaurants-area');
 
-const API_RESTAURANTS = `http://${window.location.hostname}:3000/api/restaurants`;
+const API_RESTAURANTS = `http://${window.location.hostname}:3001/api/restaurants`;
 
 // Tab Switching
 navChat.addEventListener('click', (e) => {
