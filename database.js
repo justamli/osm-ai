@@ -34,6 +34,14 @@ const db = new sqlite.Database(dbPath, (err) => {
       queuing_available BOOLEAN,
       phone_order_available BOOLEAN
     )`);
+    db.run(`CREATE TABLE IF NOT EXISTS session_messages (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      session_id TEXT,
+      role TEXT,
+      content TEXT,
+      intent TEXT,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    )`);
   }
 });
 

@@ -16,7 +16,7 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 3001;
 
 // Update this to point to the local LM API
 const LLM_API_URL = 'http://192.168.105.136:1234/api/v1/chat';
@@ -189,7 +189,7 @@ async function fetchRestaurantData(masterJson = {}) {
       return restaurants.map(r => ({
         ...r,
         region: dbEnToZhRegion[r.region] || r.region,
-        tag: r.tag.replace("Japanese", "日本菜").replace("Thai", "泰國菜").replace("Dessert", "甜品").replace("Dim Sum", "點心") 
+        tag: r.tag.replace("Japanese", "日本菜").replace("Thai", "泰國菜").replace("Dessert", "甜品").replace("Dim Sum", "點心")
       }));
     };
 
@@ -249,12 +249,8 @@ async function fetchServiceData(intent, masterJson = {}) {
   };
 }
 
-app.post('/api/chat', async (req, res) => {
+async function processChatFlow(history, currentMessage) {
   try {
-    const { history, currentMessage } = req.body;
-
-    console.log(history);
-    console.log(currentMessage);
     // Layer 1: Master Layer - Intent Classification
     const masterPromptPath = path.join(__dirname, 'public', 'prompts', 'master.txt');
     let masterPrompt = await fs.readFile(masterPromptPath, 'utf8');
@@ -263,7 +259,7 @@ app.post('/api/chat', async (req, res) => {
     try {
       const regionsList = await queryAll('SELECT DISTINCT region FROM restaurants WHERE region IS NOT NULL AND region != ""');
       const tagsList = await queryAll('SELECT DISTINCT tag FROM restaurants WHERE tag IS NOT NULL AND tag != ""');
-      
+
       const validDistricts = regionsList.map(r => r.region).join(", ");
       const validCuisines = tagsList.map(t => t.tag).join(", ");
 
@@ -405,8 +401,9 @@ app.post('/api/chat', async (req, res) => {
     const messages = [...recentReplyHistory, { role: "User", content: currentMessage }];
     const finalReply = await callLocalLLM(systemPrompt, messages);
 
-    res.json({
+    return {
       reply: finalReply,
+      intent: detectedIntent,
       debug: {
         layer1_masterOutput: intentClassificationOutput,
         layer1_intent: detectedIntent,
@@ -414,11 +411,67 @@ app.post('/api/chat', async (req, res) => {
         layer2_keywords: masterJson?.keywords || [],
         layer3_promptFile: mappedConfig.system_prompt_file
       }
-    });
+    };
 
+  } catch (error) {
+    throw error;
+  }
+}
+
+app.post('/api/chat', async (req, res) => {
+  try {
+    const { history, currentMessage } = req.body;
+    const result = await processChatFlow(history, currentMessage);
+    res.json({ reply: result.reply, debug: result.debug });
   } catch (error) {
     console.error("Chat endpoint error:", error);
     res.status(500).json({ error: 'Internal server error while processing chat.' });
+  }
+});
+
+app.post('/api/chat/session', async (req, res) => {
+  try {
+    const { sessionId, currentMessage } = req.body;
+    if (!sessionId || !currentMessage) {
+      return res.status(400).json({ error: 'sessionId and currentMessage are required' });
+    }
+
+    let history = [];
+    const messagesRows = await queryAll('SELECT role, content, intent FROM session_messages WHERE session_id = ? ORDER BY id ASC', [sessionId]);
+    if (messagesRows && messagesRows.length > 0) {
+      history = messagesRows;
+    }
+
+    const result = await processChatFlow(history, currentMessage);
+
+    await queryRun('INSERT INTO session_messages (session_id, role, content, intent) VALUES (?, ?, ?, ?)', [sessionId, 'User', currentMessage, result.intent]);
+    await queryRun('INSERT INTO session_messages (session_id, role, content, intent) VALUES (?, ?, ?, ?)', [sessionId, 'AI', result.reply, result.intent]);
+
+    res.json({ reply: result.reply, debug: result.debug, sessionId });
+  } catch (error) {
+    console.error("Session chat endpoint error:", error);
+    res.status(500).json({ error: 'Internal server error while processing session chat.' });
+  }
+});
+
+app.get('/api/chat/session/:sessionId', async (req, res) => {
+  try {
+    const { sessionId } = req.params;
+    const messagesRows = await queryAll('SELECT role, content, intent FROM session_messages WHERE session_id = ? ORDER BY id ASC', [sessionId]);
+    res.json({ sessionId, history: messagesRows || [] });
+  } catch (error) {
+    console.error("Get session chat error:", error);
+    res.status(500).json({ error: 'Internal server error while retrieving session history.' });
+  }
+});
+
+app.delete('/api/chat/session/:sessionId', async (req, res) => {
+  try {
+    const { sessionId } = req.params;
+    await queryRun('DELETE FROM session_messages WHERE session_id = ?', [sessionId]);
+    res.json({ success: true });
+  } catch (error) {
+    res.status(500).json({ error: 'Internal server error while deleting session.' });
   }
 });
 

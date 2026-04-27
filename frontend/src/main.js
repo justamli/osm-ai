@@ -9,20 +9,20 @@ const suggestionChips = document.querySelectorAll('.chip');
 const statusText = document.querySelector('.status-text');
 const statusIndicator = document.querySelector('.status-indicator');
 
-let chatHistory = [];
 let isGenerating = false;
+let sessionId = 'session_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
 
 // The backend endpoint we created
-const API_ENDPOINT = `http://${window.location.hostname}:3000/api/chat`;
+const API_ENDPOINT = `http://${window.location.hostname}:3001/api/chat/session`;
 
 // Auto-resize textarea
-messageInput.addEventListener('input', function() {
+messageInput.addEventListener('input', function () {
     this.style.height = 'auto';
     this.style.height = Math.min(this.scrollHeight, 150) + 'px';
 });
 
 // Submit on Enter
-messageInput.addEventListener('keydown', function(e) {
+messageInput.addEventListener('keydown', function (e) {
     if (e.key === 'Enter' && !e.shiftKey) {
         e.preventDefault();
         chatForm.dispatchEvent(new Event('submit'));
@@ -39,7 +39,7 @@ suggestionChips.forEach(chip => {
 
 // New Session
 newSessionBtn.addEventListener('click', () => {
-    chatHistory = [];
+    sessionId = 'session_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
     const welcome = document.querySelector('.welcome-message');
     chatMessages.innerHTML = '';
     if (welcome) {
@@ -69,7 +69,7 @@ function createMessageElement(content, isUser, debugInfo = null) {
     if (debugInfo) {
         const debugHtml = document.createElement('div');
         debugHtml.className = 'debug-trace-container';
-        
+
         debugHtml.innerHTML = `
             <div class="debug-trace-header" onclick="this.parentElement.classList.toggle('expanded')">
                 <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path><path d="M12 9v2m0 4h.01"></path></svg>
@@ -117,7 +117,7 @@ function showTypingIndicator() {
 
     const messageContent = document.createElement('div');
     messageContent.className = 'message-content';
-    
+
     for (let i = 0; i < 3; i++) {
         const dot = document.createElement('span');
         dot.className = 'typing-dot';
@@ -168,7 +168,7 @@ chatForm.addEventListener('submit', async (e) => {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
-                history: chatHistory,
+                sessionId: sessionId,
                 currentMessage: text
             })
         });
@@ -180,19 +180,15 @@ chatForm.addEventListener('submit', async (e) => {
         }
 
         const data = await response.json();
-        
+
         // Add AI message with debug info
         chatMessages.appendChild(createMessageElement(data.reply, false, data.debug));
-        
-        // Update history
-        chatHistory.push({ role: "User", content: text, intent: data.debug?.layer1_intent || 'default' });
-        chatHistory.push({ role: "Assistant", content: data.reply });
 
         setStatus('Connected');
     } catch (error) {
         removeTypingIndicator();
         console.error('Error:', error);
-        
+
         chatMessages.appendChild(createMessageElement(`Connection failed: Make sure the Node.js backend is running on port 3000 and the local LM studio is running.\nDetails: ${error.message}`, false));
         setStatus('Error', true);
     } finally {
@@ -243,12 +239,12 @@ async function loadPrompts() {
 
 function renderIntentList() {
     intentList.innerHTML = '';
-    
+
     // Always render Master first
     if (currentPrompts['master']) {
         intentList.appendChild(createIntentListItem('master', currentPrompts['master'].isSpecial));
     }
-    
+
     // Render the rest
     for (const intent of Object.keys(currentPrompts)) {
         if (intent !== 'master') {
@@ -260,30 +256,30 @@ function renderIntentList() {
 function createIntentListItem(intent, isSpecial) {
     const li = document.createElement('li');
     li.className = `intent-item ${activeIntent === intent ? 'active' : ''}`;
-    
+
     let icon = '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg>';
     if (isSpecial) {
         icon = '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="#fbbf24" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>';
     }
 
     li.innerHTML = `${icon} <span style="text-transform: capitalize;">${intent}</span>`;
-    
+
     li.addEventListener('click', () => {
         selectIntent(intent);
     });
-    
+
     return li;
 }
 
 function selectIntent(intent) {
     activeIntent = intent;
     const promptData = currentPrompts[intent];
-    
+
     currentEditTitle.textContent = `Editing: ${intent.charAt(0).toUpperCase() + intent.slice(1)}`;
     promptEditor.value = promptData.content;
     promptEditor.disabled = false;
     savePromptBtn.disabled = false;
-    
+
     // Toggle strict visibility
     if (intent === 'master') {
         restoreMasterBtn.classList.remove('hidden');
@@ -295,7 +291,7 @@ function selectIntent(intent) {
         restoreMasterBtn.classList.add('hidden');
         deleteIntentBtn.classList.remove('hidden');
     }
-    
+
     renderIntentList();
 }
 
@@ -306,18 +302,18 @@ promptEditor.addEventListener('input', () => {
 
 savePromptBtn.addEventListener('click', async () => {
     if (!activeIntent) return;
-    
+
     savePromptBtn.disabled = true;
     saveStatus.textContent = 'Saving...';
     saveStatus.style.color = 'var(--text-secondary)';
-    
+
     try {
         const res = await fetch(`${PROMPT_API}/${activeIntent}`, {
             method: 'PUT',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ content: promptEditor.value })
         });
-        
+
         if (res.ok) {
             saveStatus.textContent = 'Saved successfully!';
             saveStatus.style.color = 'var(--success-green)';
@@ -336,7 +332,7 @@ savePromptBtn.addEventListener('click', async () => {
 
 deleteIntentBtn.addEventListener('click', async () => {
     if (!activeIntent || activeIntent === 'master' || activeIntent === 'default') return;
-    
+
     if (confirm(`Are you sure you want to delete the "${activeIntent}" intent?\nThis deletes the file and unregisters it from the routing logic.`)) {
         try {
             const res = await fetch(`${PROMPT_API}/${activeIntent}`, { method: 'DELETE' });
@@ -376,13 +372,13 @@ restoreMasterBtn.addEventListener('click', async () => {
 addIntentBtn.addEventListener('click', async () => {
     const newIntent = prompt("Enter new intent name (lowercase, no spaces):");
     if (!newIntent) return;
-    
+
     const cleanIntent = newIntent.toLowerCase().trim().replace(/[^a-z0-9_]/g, '');
     if (!cleanIntent || currentPrompts[cleanIntent]) {
         alert("Invalid or duplicate intent name.");
         return;
     }
-    
+
     try {
         const defaultContent = `You are an AI handling the ${cleanIntent} intent. Answer the user appropriately.`;
         const res = await fetch(PROMPT_API, {
@@ -390,7 +386,7 @@ addIntentBtn.addEventListener('click', async () => {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ intent: cleanIntent, content: defaultContent })
         });
-        
+
         if (res.ok) {
             await loadPrompts();
             selectIntent(cleanIntent);
@@ -414,13 +410,13 @@ navChat.addEventListener('click', (e) => {
     e.preventDefault();
     navChat.classList.add('active');
     navRestaurants.classList.remove('active');
-    
+
     // show chat
     chatAreaMain.style.display = 'flex';
     document.querySelector('.chat-header').style.display = 'flex';
     chatMessages.style.display = 'flex';
     chatInputArea.style.display = 'block';
-    
+
     // hide restos
     restaurantsArea.classList.add('hidden');
 });
@@ -429,12 +425,12 @@ navRestaurants.addEventListener('click', (e) => {
     e.preventDefault();
     navRestaurants.classList.add('active');
     navChat.classList.remove('active');
-    
+
     // hide chat
     document.querySelector('.chat-header').style.display = 'none';
     chatMessages.style.display = 'none';
     chatInputArea.style.display = 'none';
-    
+
     // show restos
     restaurantsArea.classList.remove('hidden');
     loadRestaurants();
@@ -481,7 +477,7 @@ function renderRestaurantsTable() {
     });
 
     tbody.innerHTML = '';
-    
+
     // Update header UI
     document.querySelectorAll('#restaurants-table th.sortable').forEach(th => {
         const col = th.getAttribute('data-sort');
@@ -500,13 +496,13 @@ function renderRestaurantsTable() {
 
     sortedData.forEach(r => {
         const tr = document.createElement('tr');
-        
+
         // Options badges
         let optionsHtml = '';
         if (r.booking_available) optionsHtml += `<span class="status-badge">Booking</span>`;
         if (r.queuing_available) optionsHtml += `<span class="status-badge">Queuing</span>`;
         if (r.phone_order_available) optionsHtml += `<span class="status-badge">Phone Order</span>`;
-        
+
         tr.innerHTML = `
             <td>${r.id}</td>
             <td style="font-weight: 500;">${r.name || 'N/A'}</td>
@@ -565,7 +561,7 @@ function openRestaurantModal(id = null) {
     restoForm.reset();
     document.getElementById('resto-id').value = '';
     document.getElementById('restaurant-modal-title').textContent = id ? 'Edit Restaurant' : 'Add Restaurant';
-    
+
     if (id) {
         const r = currentRestaurantsData.find(x => x.id == id);
         if (r) {
@@ -582,14 +578,14 @@ function openRestaurantModal(id = null) {
             document.getElementById('resto-phone-order').checked = r.phone_order_available;
         }
     }
-    
+
     restoModal.classList.remove('hidden');
 }
 
 restoForm.addEventListener('submit', async (e) => {
     e.preventDefault();
     const id = document.getElementById('resto-id').value;
-    
+
     const payload = {
         name: document.getElementById('resto-name').value,
         region: document.getElementById('resto-region').value,
@@ -602,17 +598,17 @@ restoForm.addEventListener('submit', async (e) => {
         queuing_available: document.getElementById('resto-queuing').checked,
         phone_order_available: document.getElementById('resto-phone-order').checked
     };
-    
+
     try {
         const url = id ? `${API_RESTAURANTS}/${id}` : API_RESTAURANTS;
         const method = id ? 'PUT' : 'POST';
-        
+
         const res = await fetch(url, {
             method,
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(payload)
         });
-        
+
         if (res.ok) {
             restoModal.classList.add('hidden');
             loadRestaurants();
@@ -650,19 +646,19 @@ importCsvBtn.addEventListener('click', () => {
 csvInput.addEventListener('change', async (e) => {
     const file = e.target.files[0];
     if (!file) return;
-    
+
     const formData = new FormData();
     formData.append('file', file);
-    
+
     importCsvBtn.textContent = 'Uploading...';
     importCsvBtn.disabled = true;
-    
+
     try {
         const res = await fetch(`${API_RESTAURANTS}/import`, {
             method: 'POST',
             body: formData
         });
-        
+
         const data = await res.json();
         if (res.ok) {
             alert(`Successfully imported ${data.count} restaurants!`);
